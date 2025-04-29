@@ -1,0 +1,11 @@
+#+title: Readme
+* Jolteon fastbft Consensus
+This is based on [[https://arxiv.org/html/2106.10362v4][jolteon-v4]]
+** What is this
+This is Work in Progress of a prototype for jolteon-v4 consensus protocol
+** How do I use it
+** Additional notes
+*** References
++ [[https://flow.com/engineering-blogs/jolteon-advancing-flows-consensus-algorithm][jolteon, flow blog]]
++ [[https://medium.com/aptoslabs/shoal-how-we-reduce-bullshark-latency-on-the-aptos-blockchain-44a600d977a1][Aptos, Bullshark, the DAG]]
++ [[https://www.youtube.com/watch?v=NfRbWVcoJ-4][Aptos-Near white-board session]]
