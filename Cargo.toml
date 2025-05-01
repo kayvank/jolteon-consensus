@@ -3,8 +3,8 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [
-        "src/bin" ,
-        "src/store"
-        ]
+members = [ "src/bin"
+          , "src/store"
+          , "src/crypto"
+          , "src/network"]
 resolver = "2"

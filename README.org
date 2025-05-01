@@ -9,3 +9,4 @@ This is Work in Progress of a prototype for jolteon-v4 consensus protocol
 + [[https://flow.com/engineering-blogs/jolteon-advancing-flows-consensus-algorithm][jolteon, flow blog]]
 + [[https://medium.com/aptoslabs/shoal-how-we-reduce-bullshark-latency-on-the-aptos-blockchain-44a600d977a1][Aptos, Bullshark, the DAG]]
 + [[https://www.youtube.com/watch?v=NfRbWVcoJ-4][Aptos-Near white-board session]]
++ [[https://developers.diem.com/papers/diem-consensus-state-machine-replication-in-the-diem-blockchain/2021-08-17.pdf][diem-bft state machine replication]]

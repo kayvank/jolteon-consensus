@@ -1,59 +1,56 @@
+use bincode::{Decode, Encode, decode_from_slice, encode_to_vec};
 use core::fmt::Debug;
+use redb::{Database, Key, Range, TableDefinition, TypeName, Value};
 use std::any::type_name;
 use std::cmp::Ordering;
-use tokio::sync::mpsc::{channel, Sender};
+use tokio::sync::mpsc::{Sender, channel};
 use tokio::sync::oneshot;
-use bincode::{Decode, Encode, decode_from_slice, encode_to_vec};
-use redb::{Database, Key, Range, TableDefinition, TypeName, Value};
-
 
 type StoreError = redb::Error;
 
 type StoreResult<T> = Result<T, StoreError>;
 
-pub enum  StoreCommand<K, V>
+pub enum StoreCommand<K, V>
 where
-K: Encode + PartialEq + PartialOrd ,
-V: Encode + PartialEq
+    K: Encode + PartialEq + PartialOrd,
+    V: Encode + PartialEq,
 {
     Write(K, V),
     Read(K, oneshot::Sender<Option<V>>),
 }
 
-
-pub struct DB where
-{
+pub struct DB {
     pub db: Database,
 }
 
-pub trait Persist <K, V>
-{
-   fn put(&self, k: K, v: V) -> StoreResult<()>;
-   fn get(&self, k: &K) -> StoreResult<Option<V>> ;
+pub trait Persist<K, V> {
+    fn put(&self, k: K, v: V) -> StoreResult<()>;
+    fn get(&self, k: &K) -> StoreResult<Option<V>>;
 }
 impl DB {
     pub fn new(p: &std::path::Path) -> StoreResult<Self> {
         Database::create(p)
-            .map(|db| Self{db})
+            .map(|db| Self { db })
             .map_err(redb::Error::from)
     }
-
 }
 
 impl DB {
-    pub fn get_db(&self)-> &Database { &self.db }
+    pub fn get_db(&self) -> &Database {
+        &self.db
+    }
 }
 
-impl <K, V> Persist<K, V> for DB
+impl<K, V> Persist<K, V> for DB
 where
-K: Encode + PartialEq + PartialOrd ,
-V: Encode + PartialEq
+    K: Encode + PartialEq + PartialOrd,
+    V: Encode + PartialEq,
 {
     fn put(&self, k: K, v: V) -> StoreResult<()> {
         todo!()
     }
 
-    fn get(&self, k: &K) -> StoreResult<Option<V>>  {
+    fn get(&self, k: &K) -> StoreResult<Option<V>> {
         todo!()
     }
 }
@@ -61,15 +58,15 @@ V: Encode + PartialEq
 #[derive(Clone)]
 struct Store<K, V>
 where
-K: Encode + PartialEq + PartialOrd ,
-V: Encode + PartialEq
+    K: Encode + PartialEq + PartialOrd,
+    V: Encode + PartialEq,
 {
-    channel: Sender<StoreCommand<K, V>>
+    channel: Sender<StoreCommand<K, V>>,
 }
-impl <K, V> Store<K, V>
+impl<K, V> Store<K, V>
 where
-K: Debug + Encode + PartialEq + PartialOrd + Ord + Encode + Send + Decode<()> + 'static,
-V: Debug + Encode + PartialEq + Send + Encode + Decode <()> + 'static,
+    K: Debug + Encode + PartialEq + PartialOrd + Ord + Encode + Send + Decode<()> + 'static,
+    V: Debug + Encode + PartialEq + Send + Encode + Decode<()> + 'static,
 {
     pub fn new(path: &std::path::Path) -> StoreResult<Self> {
         let db = DB::new(path).unwrap();
@@ -87,15 +84,12 @@ V: Debug + Encode + PartialEq + Send + Encode + Decode <()> + 'static,
                         table.insert(&k, &v).unwrap();
                     }
 
-                    StoreCommand::Read(k, sender) =>  {
+                    StoreCommand::Read(k, sender) => {
                         let db_txn = db.db.begin_read().unwrap();
                         let mut table = db_txn.open_table(table_definition).unwrap();
-                        let response: Option<V> =
-                            table
-                            .get(k).unwrap().map(|x| x.value());
-                            // .value();
+                        let response: Option<V> = table.get(k).unwrap().map(|x| x.value());
+                        // .value();
                         let _ = sender.send(response);
-
                     }
                 }
             }
@@ -118,9 +112,7 @@ V: Debug + Encode + PartialEq + Send + Encode + Decode <()> + 'static,
             .await
             .expect("Failed to receive reply to Read Command from store")
     }
-
 }
-
 
 /// Wrapper type to handle keys and values using bincode serialization
 #[derive(Debug)]

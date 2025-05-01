@@ -5,8 +5,6 @@ use std::fmt::Debug;
 use bincode::{Decode, Encode, decode_from_slice, encode_to_vec};
 use redb::{Database, Error, Key, Range, TableDefinition, TypeName, Value};
 
-
-
 #[derive(Debug, Decode, Encode, PartialEq, Eq, PartialOrd, Ord)]
 struct SomeKey {
     foo: String,
@@ -40,7 +38,7 @@ fn main() -> Result<(), Error> {
         bar: 42,
     };
 
-    let db:Database  = Database::create(".db/bincode_keys.redb")?;
+    let db: Database = Database::create(".db/bincode_keys.redb")?;
     let write_txn = db.begin_write()?;
     {
         let mut table = write_txn.open_table(TABLE)?;
@@ -52,8 +50,7 @@ fn main() -> Result<(), Error> {
     let read_txn = db.begin_read()?;
     let table = read_txn.open_table(TABLE)?;
 
-    let mut iter: Range<Bincode<SomeKey>, Bincode<SomeValue>> =
-        table.range(lower..upper).unwrap();
+    let mut iter: Range<Bincode<SomeKey>, Bincode<SomeValue>> = table.range(lower..upper).unwrap();
     assert_eq!(iter.next().unwrap().unwrap().1.value(), some_value);
     assert!(iter.next().is_none());
 

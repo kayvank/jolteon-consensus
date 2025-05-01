@@ -1,0 +1,16 @@
+[package]
+name = "crypto"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# base64 = "0.22.1"
+base64 = "0.13.0"
+# //TODO upgrage
+# ed25519-dalek = { version = "2.1.1", features = ["batch"] }
+ed25519-dalek = { version = "1.0.1", features = ["batch"] }
+# //TODO upgrage
+# rand = "0.9.1"
+rand = "0.7.3"
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.44.2", features = ["rt", "macros", "sync"] }
