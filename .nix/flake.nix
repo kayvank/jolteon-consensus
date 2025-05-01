@@ -1,50 +1,105 @@
 {
-  description = "A Rust key-value store";
-
+  description = "A nix flake for jolteon consensus rust impl";
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
-        toolchain = pkgs.rust-bin.fromRustupToolchainFile ../rust-toolchain.toml;
-      in with pkgs; {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      rust-overlay,
+      flake-utils,
+      pre-commit-hooks,
+      ...
+    }@inputs:
 
-        devShells.default = mkShell {
-          buildInputs = [
-            figlet
-            toolchain
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            rust-overlay.overlays.default
+          ];
+        };
+        hook = pre-commit-hooks.lib.${system};
+        tools = import "${pre-commit-hooks}/nix/call-tools.nix" pkgs;
+        toolchain = pkgs.rust-bin.fromRustupToolchainFile ../rust-toolchain.toml;
+        cargoTomlContents = builtins.readFile ../Cargo.toml;
+        version = (builtins.fromTOML cargoTomlContents).package.version;
+
+        btc = pkgs.rustPlatform.buildRustPackage {
+          inherit version;
+          name = "btc";
+          buildInputs = with pkgs; [ openssl ];
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+            openssl.dev
+          ];
+
+          src = pkgs.lib.cleanSourceWith { src = self; };
+
+          cargoLock.lockFile = ../Cargo.lock;
+
+        };
+      in
+      rec {
+        checks.pre-commit-check = hook.run {
+          src = self;
+          tools = tools;
+          # enforce pre-commit-hook
+          hooks = {
+            rustfmt.enable = true;
+            nixfmt-rfc-style.enable = true;
+          };
+        };
+
+        overlays.default = final: prev: { btc = btc; };
+
+        gitRev = if (builtins.hasAttr "rev" self) then self.rev else "dirty";
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            nerdfetch
             openssl
             pkg-config
+            protobuf
+            curl
+            cmake
+            ninja
+            # Rust stuff (dev only)
             eza
-            rust-bin.beta.latest.default
             rust-analyzer-unwrapped
             watchexec
-            rustup
+            # Rust stuff (CI + dev)
+            toolchain
+            cargo-deny
+            # Spelling and linting
+            codespell
           ];
+          packages = with pkgs; [
+            tools.nixpkgs-fmt
+            tools.nixfmt-rfc-style
+          ];
+
           shellHook = ''
-            alias ls='eza --icons'
-            alias find=fd
-
-            set -o vi
-
+            ${checks.pre-commit-check.shellHook}
             export RUST_SRC_PATH="${toolchain}/lib/rustlib/src/rust/library"
-            ## Don't pollute local cache of cargo registry index
-            ## If you dont care about that, remvoe the line below
-            ## to amortize on your existing local cache
-            export CARGO_HOME=".cargo"
+            export CARGO_HOME="$(pwd)/.cargo"
             export PATH="$CARGO_HOME/bin:$PATH"
-            export RUST_BACKTRACE=1
-            figlet "rust jolteon consensus"
+            #
+            # Application specific
+            #
+            ##export RUST_BACKTRACE=1
+            ##export RUST_LOG='debug'
+            nerdfetch
           '';
         };
-      });
-
-  ## use iog cache
+      }
+    );
   nixConfig = {
     extra-substituters = [
       "https://cache.iog.io"

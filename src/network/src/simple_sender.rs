@@ -83,7 +83,7 @@ struct Connection {
 }
 
 impl Connection {
-    fn spawn(address: SocketAddr, receiver: Receiver<Bytes>) -> () {
+    fn spawn(address: SocketAddr, receiver: Receiver<Bytes>) {
         tokio::spawn(async move {
             Self { address, receiver }.run().await;
         });

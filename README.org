@@ -1,8 +1,7 @@
-#+title: Readme
-* Jolteon fastbft Consensus
-This is based on [[https://arxiv.org/html/2106.10362v4][jolteon-v4]]
+#+title: Jolteon fastbft Consensus
+* This is based on [[https://arxiv.org/html/2106.10362v4][jolteon-v4]]
 ** What is this
-This is Work in Progress of a prototype for jolteon-v4 consensus protocol
+WIP, Work in Progress of a prototype for jolteon-v4 consensus protocol
 ** How do I use it
 ** Additional notes
 *** References

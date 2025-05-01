@@ -1,6 +1,6 @@
 use bincode::{Decode, Encode, decode_from_slice, encode_to_vec};
 use core::fmt::Debug;
-use redb::{Database, Key, Range, TableDefinition, TypeName, Value};
+use redb::{Database, Key, TableDefinition, TypeName, Value};
 use std::any::type_name;
 use std::cmp::Ordering;
 use tokio::sync::mpsc::{Sender, channel};
@@ -56,7 +56,7 @@ where
 }
 
 #[derive(Clone)]
-struct Store<K, V>
+pub struct Store<K, V>
 where
     K: Encode + PartialEq + PartialOrd,
     V: Encode + PartialEq,
@@ -86,7 +86,7 @@ where
 
                     StoreCommand::Read(k, sender) => {
                         let db_txn = db.db.begin_read().unwrap();
-                        let mut table = db_txn.open_table(table_definition).unwrap();
+                        let table = db_txn.open_table(table_definition).unwrap();
                         let response: Option<V> = table.get(k).unwrap().map(|x| x.value());
                         // .value();
                         let _ = sender.send(response);

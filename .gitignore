@@ -1,5 +1,16 @@
+# Ignore built output
 /target
-./.cargo
-./.db
-./.direnv
-./.log
+dist/
+
+# Ignore nixos related environment-specific files
+.cargo
+.direnv
+
+# Ignore local database
+.db
+
+# Ignore local logs
+.log
+
+# pre-commit
+.pre-commit-config.yaml

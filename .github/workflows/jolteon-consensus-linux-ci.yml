@@ -1,0 +1,64 @@
+name: jolteon-consensus linux rust CI
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - './**'
+      - '.github/workflows/jolteon-consensus-linux-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - './**'
+      - '.github/workflows/jolteon-consensus-linux-ci.yml'
+
+jobs:
+  build_and_test:
+    name: jolteon-consensus - latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Free up disk space
+      run: |
+        # Remove software and language runtimes we're not using
+        sudo rm -rf \
+          "$AGENT_TOOLSDIRECTORY" \
+          /opt/google/chrome \
+          /opt/microsoft/msedge \
+          /opt/microsoft/powershell \
+          /opt/pipx \
+          /usr/lib/mono \
+          /usr/local/julia* \
+          /usr/local/lib/android \
+          /usr/local/lib/node_modules \
+          /usr/local/share/chromium \
+          /usr/local/share/powershell \
+          /usr/share/dotnet \
+          /usr/share/swift
+        df -h /
+
+    - name: Install stable toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Run cargo rustfmt
+      working-directory: .
+      run: |
+       cargo fmt --all -- --check
+
+    - name: Run cargo build
+      working-directory: .
+      run: |
+       cargo build --workspace
+
+    - name: Run cargo test
+      working-directory: ./
+      run: cargo test --workspace
