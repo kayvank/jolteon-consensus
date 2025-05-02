@@ -11,7 +11,3 @@ tokio = { version = "1.44.2", features = ["sync", "macros", "rt"] }
 
 [dev-dependencies]
 tempfile = "3.19.1"
-
-[[bin]]
-name = "testdb"
-path = "bin/testdb.rs"
