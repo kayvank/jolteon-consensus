@@ -6,5 +6,5 @@ edition = "2024"
 members = [ "src/bin"
           , "src/store"
           , "src/crypto"
-          , "src/network"]
+          , "src/network", "src/mempool"]
 resolver = "2"

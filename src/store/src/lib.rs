@@ -3,20 +3,22 @@ use core::fmt::Debug;
 use redb::{Database, Key, TableDefinition, TypeName, Value};
 use std::any::type_name;
 use std::cmp::Ordering;
+use std::collections::{HashMap, VecDeque};
 use tokio::sync::mpsc::{Sender, channel};
 use tokio::sync::oneshot;
 
-type StoreError = redb::Error;
+pub type StoreError = redb::Error;
 
 type StoreResult<T> = Result<T, StoreError>;
 
 pub enum StoreCommand<K, V>
 where
-    K: Encode + PartialEq + PartialOrd,
+    K: Encode + PartialEq + PartialOrd + Send,
     V: Encode + PartialEq,
 {
     Write(K, V),
     Read(K, oneshot::Sender<Option<V>>),
+    NotifyRead(K, oneshot::Sender<StoreResult<V>>),
 }
 
 pub struct DB {
@@ -58,23 +60,35 @@ where
 #[derive(Clone)]
 pub struct Store<K, V>
 where
-    K: Encode + PartialEq + PartialOrd,
+    K: Encode + PartialEq + PartialOrd + Send,
     V: Encode + PartialEq,
 {
     channel: Sender<StoreCommand<K, V>>,
 }
 impl<K, V> Store<K, V>
 where
-    K: Debug + Encode + PartialEq + PartialOrd + Ord + Encode + Send + Decode<()> + 'static,
+    K: Clone
+        + Debug
+        + Encode
+        + PartialEq
+        + PartialOrd
+        + Ord
+        + Encode
+        + Send
+        + Decode<()>
+        + std::hash::Hash
+        + 'static
+        + std::marker::Sync,
     V: Debug + Encode + PartialEq + Send + Encode + Decode<()> + 'static,
 {
     pub fn new(path: &std::path::Path) -> StoreResult<Self> {
         let db = DB::new(path).unwrap();
+        let mut obligations = HashMap::<_, VecDeque<oneshot::Sender<_>>>::new();
+        let (tx, mut rx) = channel::<StoreCommand<K, V>>(100);
 
         let table_definition: TableDefinition<Bincode<K>, Bincode<V>> =
             TableDefinition::new("store-table");
 
-        let (tx, mut rx) = channel::<StoreCommand<K, V>>(100);
         tokio::spawn(async move {
             while let Some(store_command) = rx.recv().await {
                 match store_command {
@@ -83,13 +97,27 @@ where
                         let mut table = db_txn.open_table(table_definition).unwrap();
                         table.insert(&k, &v).unwrap();
                     }
-
                     StoreCommand::Read(k, sender) => {
                         let db_txn = db.db.begin_read().unwrap();
                         let table = db_txn.open_table(table_definition).unwrap();
-                        let response: Option<V> = table.get(k).unwrap().map(|x| x.value());
+                        let response: Option<V> = table.get(&k).unwrap().map(|x| x.value());
                         // .value();
                         let _ = sender.send(response);
+                    }
+                    StoreCommand::NotifyRead(k, sender) => {
+                        let _k = k.clone();
+                        let db_txn = db.db.begin_read().unwrap();
+                        let table = db_txn.open_table(table_definition).unwrap();
+                        let response: Option<V> = table.get(k).unwrap().map(|x| x.value());
+                        match response {
+                            None => obligations
+                                .entry(_k)
+                                .or_insert_with(VecDeque::new)
+                                .push_back(sender),
+                            Some(_v) => {
+                                let _ = sender.send(Ok(_v));
+                            }
+                        }
                     }
                 }
             }
@@ -103,9 +131,19 @@ where
         }
     }
 
-    pub async fn read(&mut self, k: K) -> Option<V> {
+    pub async fn read(&mut self, k: K) -> StoreResult<Option<V>> {
         let (sender, receiver) = oneshot::channel();
         if let Err(e) = self.channel.send(StoreCommand::Read(k, sender)).await {
+            panic!("Failed to send Read command to store: {}", e);
+        }
+        Ok(receiver
+            .await
+            .expect("Failed to receive reply to Read Command from store"))
+    }
+
+    pub async fn notify_read(&mut self, k: K) -> StoreResult<V> {
+        let (sender, receiver) = oneshot::channel();
+        if let Err(e) = self.channel.send(StoreCommand::NotifyRead(k, sender)).await {
             panic!("Failed to send Read command to store: {}", e);
         }
         receiver

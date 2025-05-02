@@ -12,7 +12,7 @@ use tokio_util::codec::{Framed, LengthDelimitedCodec};
 pub type Writer = SplitSink<Framed<TcpStream, LengthDelimitedCodec>, Bytes>;
 
 #[async_trait]
-trait MessageHandler: Clone + Send + Sync + 'static {
+pub trait MessageHandler: Clone + Send + Sync + 'static {
     /// Defines how to handle an incoming message.
     async fn dispatch(&self, writer: &mut Writer, messge: Bytes) -> Result<(), NetworkError>;
 }
