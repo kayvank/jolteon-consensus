@@ -7,7 +7,7 @@ dist/
 .direnv
 
 # Ignore local database
-.db
+.db*
 
 # Ignore local logs
 .log

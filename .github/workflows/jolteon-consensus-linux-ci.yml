@@ -3,15 +3,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - './**'
-      - '.github/workflows/jolteon-consensus-linux-ci.yml'
   pull_request:
-    branches:
-      - main
-    paths:
-      - './**'
-      - '.github/workflows/jolteon-consensus-linux-ci.yml'
 
 jobs:
   build_and_test:
@@ -27,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Free up disk space
+    - name: Free-up-disk-space
       run: |
         # Remove software and language runtimes we're not using
         sudo rm -rf \
@@ -46,19 +38,24 @@ jobs:
           /usr/share/swift
         df -h /
 
-    - name: Install stable toolchain
+    - name: Install-toolchain
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Run cargo rustfmt
+    - name: Rustfmt
       working-directory: .
       run: |
        cargo fmt --all -- --check
 
-    - name: Run cargo build
+    - name: Clippy
+      working-directory: .
+      run: |
+       cargo clippy --all
+
+    - name: Build
       working-directory: .
       run: |
        cargo build --workspace
 
-    - name: Run cargo test
+    - name: Test
       working-directory: ./
       run: cargo test --workspace

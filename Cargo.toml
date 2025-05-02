@@ -1,10 +1,12 @@
+[workspace.package]
 name = "jolteon-consensus"
 version = "0.1.0"
 edition = "2024"
+
 
 [workspace]
 members = [ "src/bin"
           , "src/store"
           , "src/crypto"
-          , "src/network"]
+          , "src/network", "src/mempool"]
 resolver = "2"

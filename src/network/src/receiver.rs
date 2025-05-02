@@ -4,6 +4,7 @@ use bytes::Bytes;
 use futures::stream::SplitSink;
 use futures::stream::StreamExt as _;
 use log::{debug, info, warn};
+use std::error::Error;
 use std::net::SocketAddr;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
@@ -12,9 +13,9 @@ use tokio_util::codec::{Framed, LengthDelimitedCodec};
 pub type Writer = SplitSink<Framed<TcpStream, LengthDelimitedCodec>, Bytes>;
 
 #[async_trait]
-trait MessageHandler: Clone + Send + Sync + 'static {
+pub trait MessageHandler: Clone + Send + Sync + 'static {
     /// Defines how to handle an incoming message.
-    async fn dispatch(&self, writer: &mut Writer, messge: Bytes) -> Result<(), NetworkError>;
+    async fn dispatch(&self, writer: &mut Writer, messge: Bytes) -> Result<(), Box<dyn Error>>;
 }
 /// For each incoming request, we spawn a new runner responsible to receive messages and forward them
 /// through the provided deliver channel.
