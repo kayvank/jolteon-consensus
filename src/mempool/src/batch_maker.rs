@@ -1,16 +1,11 @@
 use crate::quorum_waiter::QuorumWaiterMessage;
-use bincode::{Decode, Encode, config};
+use bincode::config;
 use bytes::Bytes;
-#[cfg(feature = "benchmark")]
-use crypto::Digest;
 use crypto::{Digest, PublicKey};
-#[cfg(feature = "benchmark")]
 use ed25519_dalek::{Digest as _, Sha512};
-#[cfg(feature = "benchmark")]
 use log::info;
 use network::ReliableSender;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "benchmark")]
 use std::convert::TryInto as _;
 use std::net::SocketAddr;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -96,13 +91,9 @@ impl BatchMaker {
 
     /// Seal and broadcast the current batch.
     async fn seal(&mut self) {
-        #[cfg(feature = "benchmark")]
         let size = self.current_batch_size;
 
-        let bin_serializer_config = bincode::config::standard();
-
         // Look for sample txs (they all start with 0) and gather their txs id (the next 8 bytes).
-        #[cfg(feature = "benchmark")]
         let tx_ids: Vec<_> = self
             .current_batch
             .iter()
@@ -111,14 +102,12 @@ impl BatchMaker {
             .collect();
 
         // Serialize the batch.
-        let config = config::standard();
         self.current_batch_size = 0;
         let batch: Vec<_> = self.current_batch.drain(..).collect();
         let message = MempoolMessage::Batch(batch);
-        let serialized: Vec<u8> = bincode::serde::encode_to_vec(&message, config)
+        let serialized: Vec<u8> = bincode::serde::encode_to_vec(&message, config::standard())
             .expect("Failed to serialize our own batch");
 
-        #[cfg(feature = "benchmark")]
         {
             // NOTE: This is one extra hash that is only needed to print the following log entries.
             let digest = Digest(
@@ -162,3 +151,6 @@ pub enum MempoolMessage {
     Batch(Batch),
     BatchRequest(Vec<Digest>, /* origin */ PublicKey),
 }
+#[cfg(test)]
+#[path = "tests/batch_maker_test.rs"]
+pub mod batch_maker_test;

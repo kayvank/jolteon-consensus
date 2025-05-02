@@ -206,3 +206,6 @@ impl Synchronizer {
         }
     }
 }
+#[cfg(test)]
+#[path = "tests/synchronizer_tests.rs"]
+pub mod synchronizer_tests;

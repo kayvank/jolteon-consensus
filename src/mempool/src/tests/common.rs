@@ -8,7 +8,6 @@ use ed25519_dalek::Sha512;
 use futures::sink::SinkExt as _;
 use futures::stream::StreamExt as _;
 use rand::SeedableRng as _;
-use rand::rngs::OsRng;
 use rand::rngs::StdRng;
 use std::convert::TryInto as _;
 use std::net::SocketAddr;
@@ -54,7 +53,7 @@ pub fn committee_with_base_port(base_port: u16) -> Committee {
 
 // Fixture
 pub fn transaction() -> Transaction {
-    vec![0; 100]
+    vec![1; 100]
 }
 
 // Fixture

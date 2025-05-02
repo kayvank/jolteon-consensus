@@ -1,6 +1,5 @@
 use super::*;
 use crate::common::{batch_digest, committee_with_base_port, keys, listener, serialized_batch};
-use std::fs;
 use tokio::sync::mpsc::channel;
 
 #[tokio::test]
@@ -10,9 +9,8 @@ async fn batch_reply() {
     let committee = committee_with_base_port(8_000);
 
     // Create a new test store.
-    let path = std::path::Path::new("./db/db_test_batch_reply");
-    let _ = fs::remove_dir_all(path);
-    let mut store = Store::new(&path).unwrap();
+    let path = tempfile::NamedTempFile::new().unwrap().into_temp_path();
+    let mut store = Store::new(path).unwrap();
 
     // Add a batch to the store.
     store

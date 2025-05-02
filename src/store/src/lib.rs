@@ -30,7 +30,7 @@ pub trait Persist<K, V> {
     fn get(&self, k: &K) -> StoreResult<Option<V>>;
 }
 impl DB {
-    pub fn new(p: &std::path::Path) -> StoreResult<Self> {
+    pub fn new(p: impl AsRef<std::path::Path>) -> StoreResult<Self> {
         Database::create(p)
             .map(|db| Self { db })
             .map_err(redb::Error::from)
@@ -40,20 +40,6 @@ impl DB {
 impl DB {
     pub fn get_db(&self) -> &Database {
         &self.db
-    }
-}
-
-impl<K, V> Persist<K, V> for DB
-where
-    K: Encode + PartialEq + PartialOrd,
-    V: Encode + PartialEq,
-{
-    fn put(&self, k: K, v: V) -> StoreResult<()> {
-        todo!()
-    }
-
-    fn get(&self, k: &K) -> StoreResult<Option<V>> {
-        todo!()
     }
 }
 
@@ -81,26 +67,44 @@ where
         + std::marker::Sync,
     V: Debug + Encode + PartialEq + Send + Encode + Decode<()> + 'static,
 {
-    pub fn new(path: &std::path::Path) -> StoreResult<Self> {
-        let db = DB::new(path).unwrap();
+    pub fn new(path: impl AsRef<std::path::Path>) -> StoreResult<Self> {
+        let db = DB::new(path)?;
         let mut obligations = HashMap::<_, VecDeque<oneshot::Sender<_>>>::new();
         let (tx, mut rx) = channel::<StoreCommand<K, V>>(100);
 
         let table_definition: TableDefinition<Bincode<K>, Bincode<V>> =
-            TableDefinition::new("store-table");
+            TableDefinition::new("q2consensus");
 
         tokio::spawn(async move {
             while let Some(store_command) = rx.recv().await {
                 match store_command {
                     StoreCommand::Write(k, v) => {
-                        let db_txn = db.db.begin_write().unwrap();
-                        let mut table = db_txn.open_table(table_definition).unwrap();
-                        table.insert(&k, &v).unwrap();
+                        let db_txn = db
+                            .db
+                            .begin_write()
+                            .expect("failed to start a database write-transaction");
+                        {
+                            let mut table = db_txn
+                                .open_table(table_definition)
+                                .expect("failed to open table for write-transaction");
+                            table
+                                .insert(&k, &v)
+                                .expect("failed to insert into database");
+                        }
+                        db_txn
+                            .commit()
+                            .expect("failed to commit writes to database");
                     }
                     StoreCommand::Read(k, sender) => {
-                        let db_txn = db.db.begin_read().unwrap();
-                        let table = db_txn.open_table(table_definition).unwrap();
+                        let db_txn = db
+                            .db
+                            .begin_read()
+                            .expect("failed to start database read operation");
+                        let table = db_txn
+                            .open_table(table_definition)
+                            .expect("failed to open table for read operation");
                         let response: Option<V> = table.get(&k).unwrap().map(|x| x.value());
+
                         // .value();
                         let _ = sender.send(response);
                     }
@@ -126,6 +130,7 @@ where
     }
 
     pub async fn write(&mut self, k: K, v: V) {
+        println!("write is invoked ");
         if let Err(e) = self.channel.send(StoreCommand::Write(k, v)).await {
             panic!("Failed to send Write command to store: {}", e);
         }
@@ -204,3 +209,6 @@ where
         Self::from_bytes(data1).cmp(&Self::from_bytes(data2))
     }
 }
+#[cfg(test)]
+#[path = "tests/store_test.rs"]
+pub mod store_tests;

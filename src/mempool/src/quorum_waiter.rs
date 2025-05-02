@@ -63,7 +63,7 @@ impl QuorumWaiter {
     async fn run(&mut self) {
         // Hold the dissemination handlers of the f slower nodes.
         let mut pending = FuturesUnordered::new();
-        let mut pending_counter = 0;
+        let mut pending_counter: usize = 0;
         loop {
             tokio::select! {
                 Some(QuorumWaiterMessage { batch, handlers }) = self.rx_message.recv() => {
@@ -96,7 +96,7 @@ impl QuorumWaiter {
                     if pending_counter >= DISSEMINATION_QUEUE_MAX {
                         pending.push(async move {
                             tokio::select! {
-                                _ = async move {while let Some(_) = wait_for_quorum.next().await {}} => (),
+                                _ = async move {while (wait_for_quorum.next().await).is_some() {}} => (),
                                 () = sleep(Duration::from_millis(DISSEMINATION_DEADLINE)) => ()
                             }
                         });
@@ -104,11 +104,12 @@ impl QuorumWaiter {
                     }
                 },
                 Some(_) = pending.next() =>  {
-                    if pending_counter > 0 {
-                        pending_counter -= 1;
-                    }
+                    pending_counter = pending_counter.saturating_sub(1);
                 }
             }
         }
     }
 }
+#[cfg(test)]
+#[path = "./tests/quorum_waiter_test.rs"]
+pub mod quorum_waiter_test;
