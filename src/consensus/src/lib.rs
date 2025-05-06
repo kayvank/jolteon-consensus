@@ -1,6 +1,9 @@
 pub mod config;
 pub mod error;
 pub mod messages;
+pub mod proposer;
+pub mod synchronizer;
+pub mod timer;
 pub mod types;
 
 #[cfg(test)]

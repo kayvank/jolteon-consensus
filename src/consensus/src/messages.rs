@@ -325,3 +325,12 @@ impl fmt::Debug for TC {
         write!(f, "TC({}, {:?})", self.round, self.high_qc_rounds())
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ConsensusMessage {
+    Propose(Block),
+    Vote(Vote),
+    Timeout(Timeout),
+    TC(TC),
+    SyncRequest(Digest, PublicKey),
+}

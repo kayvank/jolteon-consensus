@@ -73,3 +73,6 @@ impl<Handler: MessageHandler> Receiver<Handler> {
         });
     }
 }
+#[cfg(test)]
+#[path = "tests/receiver_tests.rs"]
+pub mod receiver_tests;

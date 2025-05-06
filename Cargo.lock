@@ -478,11 +478,13 @@ name = "network"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bincode",
  "bytes",
  "futures",
  "log",
  "logs",
  "rand 0.9.1",
+ "serde",
  "thiserror",
  "tokio",
  "tokio-util",

@@ -130,3 +130,7 @@ impl Connection {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "tests/simple_sender_tests.rs"]
+pub mod simple_sender_tests;
