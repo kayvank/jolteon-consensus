@@ -117,17 +117,12 @@ impl Synchronizer {
             return Ok(Some(Block::genesis()));
         }
         let parent: &Digest = block.parent();
-        let res: Option<Vec<u8>> = self.store.read(parent.to_vec()).await?;
-        // match self.store.read(parent.to_vec()).await? {
-        match res {
-            Some(bytes) => {
-                match bincode::serde::decode_from_slice(&bytes, bincode::config::standard()) {
-                    Ok((b, _)) => Ok(b),
-                    Err(e) => {
-                        error!("decoding error: {}", e);
-                        Err(ConsensusError::DcodeError(Box::new(e)))
-                        // panic!("decoding error {}", e);
-                    }
+
+        match self.store.read(parent.to_vec()).await? {
+            Some(_bytes) => {
+                match bincode::serde::decode_from_slice(&_bytes, bincode::config::standard()) {
+                    Ok((b, _)) => Ok(Some(b)),
+                    Err(e) => Err(ConsensusError::DcodeError(Box::new(e))),
                 }
             }
             None => {

@@ -217,3 +217,6 @@ impl Connection {
         error
     }
 }
+#[cfg(test)]
+#[path = "tests/reliable_sender_tests.rs"]
+pub mod reliable_sender_tests;

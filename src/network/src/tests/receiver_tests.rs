@@ -34,10 +34,9 @@ async fn receive() {
     sleep(Duration::from_millis(50)).await;
 
     // Send a message.
-    let sent = "Hello, world!";
+    let sent: &str = "Hello, world!";
     let bytes =
         Bytes::from(bincode::serde::encode_to_vec(sent, bincode::config::standard()).unwrap());
-
     let stream = TcpStream::connect(address).await.unwrap();
     let mut transport = Framed::new(stream, LengthDelimitedCodec::new());
     transport.send(bytes.clone()).await.unwrap();
@@ -45,6 +44,6 @@ async fn receive() {
     // Ensure the message gets passed to the channel.
     let message = rx.recv().await;
     assert!(message.is_some());
-    let received = message.unwrap();
-    assert_eq!(received, sent);
+    let received: String = message.unwrap();
+    assert_eq!(received.to_owned(), sent);
 }

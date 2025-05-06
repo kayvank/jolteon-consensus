@@ -1,6 +1,5 @@
 use super::*;
 use crate::common::{block, chain, committee, committee_with_base_port, keys, listener};
-use std::fs;
 
 #[tokio::test]
 async fn get_existing_parent_block() {
@@ -13,7 +12,16 @@ async fn get_existing_parent_block() {
     let mut store = Store::new(path).unwrap();
     let key: Vec<u8> = b2.digest().to_vec();
     let value: Vec<u8> = bincode::serde::encode_to_vec(&b2, bincode::config::standard()).unwrap();
-    let _ = store.write(key, value).await;
+    let (_b2, _): (Block, usize) =
+        bincode::serde::decode_from_slice(&value, bincode::config::standard()).unwrap();
+    assert_eq!(_b2, b2.clone(), "encode decode of value failed");
+
+    let _ = store.write(key.clone(), value.clone()).await;
+    let _v = store.read(key.clone()).await;
+    let (v, _): (Block, usize) =
+        bincode::serde::decode_from_slice(&_v.unwrap().unwrap(), bincode::config::standard())
+            .unwrap();
+    assert_eq!(v, b2, "decoding of v and value has failed");
 
     // Make a new synchronizer.
     let (name, _) = keys().pop().unwrap();

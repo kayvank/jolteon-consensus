@@ -9,7 +9,7 @@ use tokio::sync::oneshot;
 
 pub type StoreError = redb::Error;
 
-type StoreResult<T> = Result<T, StoreError>;
+pub type StoreResult<T> = Result<T, StoreError>;
 
 pub enum StoreCommand<K, V>
 where
