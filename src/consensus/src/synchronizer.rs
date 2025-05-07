@@ -122,7 +122,7 @@ impl Synchronizer {
             Some(_bytes) => {
                 match bincode::serde::decode_from_slice(&_bytes, bincode::config::standard()) {
                     Ok((b, _)) => Ok(Some(b)),
-                    Err(e) => Err(ConsensusError::DcodeError(Box::new(e))),
+                    Err(e) => Err(ConsensusError::DecodeError(Box::new(e))),
                 }
             }
             None => {

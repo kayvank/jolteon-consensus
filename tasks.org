@@ -1,0 +1,22 @@
+#+title: jolteon-consensus-prototype todo tasks
+* jolteon-consensus-prototype [0/2]
+** TODO create project :rust:
+*** TODO github CI
+*** packages [5/9]:consensus:
+**** DONE crypto :consensus:
+create the project, add unit tests. The crypto package will do:
++ signature
++ key generation
+**** DONE store
+Used for persistence. For this part, we'll use embedded key-value store.
+Neither nix nor Ubuntu's,  RockDB built were successful.
+For now I opted out to using [[https://www.redb.org/][redb]]
+**** DONE network
+**** DONE mempool
+**** DONE consensus
+**** TODO node
+**** TODO benchmark
+**** TODO docs, readme :doc:
+
+*** TODO update rand :pkgupdate:
+*** TODO update db for rocks-db :pkgupdate:

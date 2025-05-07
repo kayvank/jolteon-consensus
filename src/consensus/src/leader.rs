@@ -13,6 +13,9 @@ impl RRLeaderElector {
         Self { committee }
     }
 
+    /// get the round leader.
+    /// This is a simple algorithm for this prototyp.
+    /// A more elaborate algorithm that considers `stake` may be implemented
     pub fn get_leader(&self, round: Round) -> PublicKey {
         let mut keys: Vec<_> = self.committee.authorities.keys().cloned().collect();
         keys.sort();

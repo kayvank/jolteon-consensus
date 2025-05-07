@@ -314,6 +314,7 @@ impl Core {
         // then ensure we process both ancestors in the correct order, and
         // finally make us resume processing this block.
         let (b0, b1) = match self.synchronizer.get_ancestors(block).await? {
+            //TODO this rule is for hutstuff. for jolteon, we only need one ancestor
             Some(ancestors) => ancestors,
             None => {
                 debug!("Processing of {} suspended: missing parent", block.digest());
@@ -435,7 +436,7 @@ impl Core {
             match result {
                 Ok(()) => (),
                 Err(ConsensusError::StoreError(e)) => error!("{}", e),
-                Err(ConsensusError::EcodeError(e)) => error!("Store corrupted. {}", e),
+                Err(ConsensusError::EncodeError(e)) => error!("Store corrupted. {}", e),
                 Err(e) => warn!("{}", e),
             }
         }

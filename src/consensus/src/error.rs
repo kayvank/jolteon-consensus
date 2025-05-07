@@ -27,10 +27,10 @@ pub enum ConsensusError {
     NetworkError(#[from] std::io::Error),
 
     #[error("Decode error: {0}")]
-    DcodeError(#[from] Box<bincode::error::DecodeError>),
+    DecodeError(#[from] Box<bincode::error::DecodeError>),
 
     #[error("Encode error: {0}")]
-    EcodeError(#[from] Box<bincode::error::EncodeError>),
+    EncodeError(#[from] Box<bincode::error::EncodeError>),
 
     #[error("Store error: {0}")]
     StoreError(#[from] StoreError),
