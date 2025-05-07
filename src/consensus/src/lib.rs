@@ -1,5 +1,9 @@
+pub mod aggregator;
 pub mod config;
+pub mod core;
 pub mod error;
+pub mod leader;
+pub mod mempool;
 pub mod messages;
 pub mod proposer;
 pub mod synchronizer;

@@ -72,12 +72,6 @@ impl Proposer {
 
         if !block.payload.is_empty() {
             info!("Created {}", block);
-
-            #[cfg(feature = "benchmark")]
-            for x in &block.payload {
-                // NOTE: This log entry is used to compute performance.
-                info!("Created {} -> {:?}", block, x);
-            }
         }
         debug!("Created {:?}", block);
 
