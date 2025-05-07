@@ -113,7 +113,7 @@ impl PartialEq for Timeout {
     }
 }
 
-// Fixture.
+/// Fixture.
 pub fn block() -> Block {
     let (public_key, secret_key) = keys().pop().unwrap();
     Block::new_from_key(QC::genesis(), public_key, 1, Vec::new(), &secret_key)

@@ -182,7 +182,7 @@ impl Core {
             .map(|(_, x)| x)
             .collect();
         let message = bincode::serde::encode_to_vec(
-            &ConsensusMessage::Timeout(timeout.clone()),
+            ConsensusMessage::Timeout(timeout.clone()),
             bincode::config::standard(),
         )
         .expect("Failed to serialize timeout message");
@@ -247,7 +247,7 @@ impl Core {
                 .map(|(_, x)| x)
                 .collect();
             let message = bincode::serde::encode_to_vec(
-                &ConsensusMessage::TC(tc.clone()),
+                ConsensusMessage::TC(tc.clone()),
                 bincode::config::standard(),
             )
             .expect("Failed to serialize timeout certificate");
@@ -354,7 +354,7 @@ impl Core {
                     .address(&next_leader)
                     .expect("The next leader is not in the committee");
                 let message = bincode::serde::encode_to_vec(
-                    &ConsensusMessage::Vote(vote),
+                    ConsensusMessage::Vote(vote),
                     bincode::config::standard(),
                 )
                 .expect("Failed to serialize vote");

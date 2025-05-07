@@ -4,10 +4,9 @@ use crate::error::ConsensusError;
 use crate::helper::Helper;
 use crate::leader::LeaderElector;
 use crate::mempool::MempoolDriver;
-use crate::messages::{Block, ConsensusMessage};
+use crate::messages::{Block, Timeout, Vote, TC};
 use crate::proposer::Proposer;
 use crate::synchronizer::Synchronizer;
-use crate::types::{CHANNEL_CAPACITY, Store};
 use async_trait::async_trait;
 use bytes::Bytes;
 use crypto::{Digest, PublicKey, SignatureService};
@@ -15,8 +14,29 @@ use futures::SinkExt as _;
 use log::info;
 use mempool::ConsensusMempoolMessage;
 use network::{MessageHandler, Receiver as NetworkReceiver, Writer};
+use serde::{Deserialize, Serialize};
 use std::error::Error;
-use tokio::sync::mpsc::{Receiver, Sender, channel};
+use crate::types::{Store, Round, CHANNEL_CAPACITY};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
+
+#[cfg(test)]
+#[path = "tests/consensus_tests.rs"]
+pub mod consensus_tests;
+
+/// The default channel capacity for each channel of the consensus.
+pub const CHANNEL_CAPACITY: usize = 1_000;
+
+/// The consensus round number.
+pub type Round = u64;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ConsensusMessage {
+    Propose(Block),
+    Vote(Vote),
+    Timeout(Timeout),
+    TC(TC),
+    SyncRequest(Digest, PublicKey),
+}
 
 pub struct Consensus;
 
@@ -115,15 +135,13 @@ struct ConsensusReceiverHandler {
 impl MessageHandler for ConsensusReceiverHandler {
     async fn dispatch(&self, writer: &mut Writer, serialized: Bytes) -> Result<(), Box<dyn Error>> {
         // Deserialize and parse the message.
-        match bincode::serde::decode_from_slice(&serialized, bincode::config::standard())
-            .map_err(|e| ConsensusError::DecodeError(Box::new(e)))?
-        {
-            (ConsensusMessage::SyncRequest(missing, origin), _) => self
+        match bincode::deserialize(&serialized).map_err(ConsensusError::SerializationError)? {
+            ConsensusMessage::SyncRequest(missing, origin) => self
                 .tx_helper
                 .send((missing, origin))
                 .await
                 .expect("Failed to send consensus message"),
-            (message @ ConsensusMessage::Propose(..), _) => {
+            message @ ConsensusMessage::Propose(..) => {
                 // Reply with an ACK.
                 let _ = writer.send(Bytes::from("Ack")).await;
 
@@ -133,7 +151,7 @@ impl MessageHandler for ConsensusReceiverHandler {
                     .await
                     .expect("Failed to consensus message")
             }
-            (message, _) => self
+            message => self
                 .tx_consensus
                 .send(message)
                 .await
@@ -142,7 +160,3 @@ impl MessageHandler for ConsensusReceiverHandler {
         Ok(())
     }
 }
-
-#[cfg(test)]
-#[path = "tests/consensus_tests.rs"]
-pub mod consensus_tests;

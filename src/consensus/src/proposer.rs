@@ -84,7 +84,7 @@ impl Proposer {
             .cloned()
             .unzip();
         let message = bincode::serde::encode_to_vec(
-            &ConsensusMessage::Propose(block.clone()),
+            ConsensusMessage::Propose(block.clone()),
             bincode::config::standard(),
         )
         .expect("Failed to serialize block");
