@@ -77,7 +77,7 @@ impl Synchronizer {
                         Err(e) => error!("{}", e)
                     },
                     () = &mut timer => {
-                        // This implements the 'perfect point to point link' abstraction.
+                        // This implements the 'point to point link' abstraction.
                         for (digest, timestamp) in &requests {
                             let now = SystemTime::now()
                                 .duration_since(UNIX_EPOCH)
@@ -125,12 +125,10 @@ impl Synchronizer {
                     Err(e) => Err(ConsensusError::DecodeError(Box::new(e))),
                 }
             }
-            None => {
-                if let Err(e) = self.inner_channel.send(block.clone()).await {
-                    panic!("Failed to send request to synchronizer: {}", e);
-                }
-                Ok(None)
-            }
+            None => match self.inner_channel.send(block.clone()).await {
+                Ok(()) => Ok(None),
+                Err(e) => panic!("Failed to send request to synchronizer: {}", e),
+            },
         }
     }
 

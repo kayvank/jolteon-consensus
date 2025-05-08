@@ -117,6 +117,7 @@ impl Connection {
                 response = reader.next() => {
                     match response {
                         Some(Ok(_)) => {
+                            info!("Response received");
                             // Sink the reply.
                         },
                         _ => {
