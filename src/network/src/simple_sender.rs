@@ -117,6 +117,7 @@ impl Connection {
                 response = reader.next() => {
                     match response {
                         Some(Ok(_)) => {
+                            info!("Response received");
                             // Sink the reply.
                         },
                         _ => {
@@ -130,3 +131,7 @@ impl Connection {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "tests/simple_sender_tests.rs"]
+pub mod simple_sender_tests;

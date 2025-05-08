@@ -9,7 +9,7 @@ use tokio::sync::oneshot;
 
 pub type StoreError = redb::Error;
 
-type StoreResult<T> = Result<T, StoreError>;
+pub type StoreResult<T> = Result<T, StoreError>;
 
 pub enum StoreCommand<K, V>
 where
@@ -130,7 +130,6 @@ where
     }
 
     pub async fn write(&mut self, k: K, v: V) {
-        println!("write is invoked ");
         if let Err(e) = self.channel.send(StoreCommand::Write(k, v)).await {
             panic!("Failed to send Write command to store: {}", e);
         }
