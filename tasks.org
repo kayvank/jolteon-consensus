@@ -1,4 +1,4 @@
-#+title: jolteon-consensus-prototype todo tasks
+#+title: org-agenda for jolteon-consensus-prototype
 * jolteon-consensus-prototype [0/2]
 ** TODO create project :rust:
 *** TODO github CI

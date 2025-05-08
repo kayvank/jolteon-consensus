@@ -243,3 +243,6 @@ impl SignatureService {
             .expect("Failed to receive signature from Signature Service")
     }
 }
+#[cfg(test)]
+#[path = "tests/crypto_tests.rs"]
+pub mod crypto_tests;
