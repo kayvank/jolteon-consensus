@@ -5,8 +5,10 @@ edition = "2024"
 
 
 [workspace]
-members = [ "src/bin"
-          , "src/store"
+members = [ "src/store"
           , "src/crypto"
-          , "src/network", "src/mempool", "src/consensus"]
+          , "src/network"
+          , "src/mempool"
+          , "src/consensus"
+          , "src/node"]
 resolver = "2"
