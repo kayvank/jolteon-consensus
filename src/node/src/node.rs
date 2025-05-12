@@ -73,6 +73,11 @@ impl Node {
         Secret::new().write(filename)
     }
 
+    pub fn print_comittee_file(filename: &str) -> Result<(), ConfigError> {
+        todo!()
+        // Committee::new().write(filename)
+    }
+
     pub async fn analyze_block(&mut self) {
         while let Some(_block) = self.commit.recv().await {
             // This is where we can further process committed block.
